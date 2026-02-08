@@ -1,0 +1,8 @@
+
+{
+  "name": "EcoWardrobe AI",
+  "description": "Reduce clothing waste and overconsumption through intelligent wardrobe analysis, DIY transformation guides, and mindful closet management.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
