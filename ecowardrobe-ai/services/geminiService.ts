@@ -16,9 +16,10 @@ export const categorizeItemFromImage = async (base64Data: string): Promise<AICat
         }
       },
       {
-        text: `Analyze this clothing item and return details in JSON format.
-        Categories MUST be one of: Shirts, Skirts, Jeans, Pajamas, Socks, Shoes, Dresses, Outerwear, Other.
-        Identify the primary color and material.`
+        text: `You are a professional fashion assistant. Analyze this image and identify the clothing item. 
+        Categorize it strictly into one of these: Shirts, Skirts, Jeans, Pajamas, Socks, Shoes, Dresses, Outerwear, Other.
+        Also provide a short descriptive name (e.g., 'Blue Denim Jacket'), the primary color, and the material (e.g., 'Cotton', 'Denim', 'Wool').
+        Return the result in JSON format.`
       }
     ],
     config: {
@@ -36,7 +37,9 @@ export const categorizeItemFromImage = async (base64Data: string): Promise<AICat
     }
   });
 
-  return JSON.parse(response.text || '{}');
+  const text = response.text;
+  if (!text) throw new Error("No response from Gemini");
+  return JSON.parse(text);
 };
 
 export const analyzeWardrobeUsage = async (
@@ -47,7 +50,7 @@ export const analyzeWardrobeUsage = async (
   
   const prompt = `
     As a sustainable fashion expert, analyze this wardrobe against the user's style profile.
-    Identify items that are likely neglected or underused.
+    Identify items that are likely neglected or underused based on the user's preferences.
     
     User Style Profile:
     - Preferred Styles: ${profile.preferredStyles.join(', ')}
@@ -57,7 +60,7 @@ export const analyzeWardrobeUsage = async (
     Wardrobe Items:
     ${items.map(i => `- ID: ${i.id}, Name: ${i.name}, Category: ${i.category}, Color: ${i.color}, Wear Count: ${i.wearCount}`).join('\n')}
     
-    Provide an analysis for each item with ID, reasoning for usage patterns, and a suggested path (DONATE, TRANSFORM, or RESERVE).
+    For each item that doesn't fit the profile well or hasn't been worn much, provide reasoning and a suggestion.
   `;
 
   const response = await ai.models.generateContent({
@@ -81,7 +84,8 @@ export const analyzeWardrobeUsage = async (
     }
   });
 
-  return JSON.parse(response.text || '[]');
+  const text = response.text;
+  return JSON.parse(text || '[]');
 };
 
 export const generateTransformationGuide = async (
@@ -91,10 +95,9 @@ export const generateTransformationGuide = async (
   const ai = getAI();
   
   const prompt = `
-    Create a DIY transformation guide to turn this "${item.name}" into something that fits the user's "${profile.preferredStyles.join(', ')}" style.
-    The goal is to reduce waste and ensure the user actually wears the item.
-    
-    Item Details: ${item.color} ${item.material} ${item.category}.
+    Create a creative DIY transformation guide to turn this "${item.name}" (${item.color} ${item.material}) 
+    into something that fits the user's preferred style: "${profile.preferredStyles.join(', ')}".
+    Focus on making it something they will actually wear frequently.
   `;
 
   const response = await ai.models.generateContent({
@@ -115,5 +118,6 @@ export const generateTransformationGuide = async (
     }
   });
 
-  return JSON.parse(response.text || '{}');
+  const text = response.text;
+  return JSON.parse(text || '{}');
 };
